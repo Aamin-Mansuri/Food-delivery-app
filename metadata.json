@@ -1,0 +1,6 @@
+{
+  "name": "FoodRush",
+  "description": "Production-ready Food Delivery Platform with Customer, Restaurant, Delivery, and Admin panels.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
