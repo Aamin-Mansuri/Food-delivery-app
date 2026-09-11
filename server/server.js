@@ -1,70 +1,79 @@
 import http from 'http';
-import path from 'path';
-import express from 'express';
 import { Server } from 'socket.io';
-import { createServer as createViteServer } from 'vite';
 import app from './app.js';
 import { connectDB } from './config/db.js';
 import { storeService } from './services/storeService.js';
+import dotenv from 'dotenv';
 
-const isBackendOnly =
-  process.argv.includes('--backend') ||
-  process.env.npm_lifecycle_event === 'backend' ||
-  process.env.npm_lifecycle_event === 'server';
+// Load environment variables
+dotenv.config();
 
-const PORT = Number(process.env.PORT || (isBackendOnly ? 5000 : 3000));
+const PORT = Number(process.env.PORT || 5000);
+
+// Create HTTP server from Express app
 const server = http.createServer(app);
 
-// Setup Socket.IO
+// Setup Socket.IO for real-time features (order tracking, delivery updates)
 const io = new Server(server, {
-  cors: { origin: '*' }
+  cors: {
+    origin: '*',
+    methods: ['GET', 'POST'],
+  },
 });
+
+// Make io accessible from any route handler via req.app.get('io')
 app.set('io', io);
 
+// Socket.IO event handlers
 io.on('connection', (socket) => {
-  socket.on('joinOrderRoom', (id) => socket.join(`order_${id}`));
-  socket.on('joinRestaurantRoom', (id) => socket.join(`restaurant_${id}`));
-  socket.on('joinDeliveryPartner', () => socket.join('delivery_partners'));
+  console.log(`[Socket.IO] Client connected: ${socket.id}`);
+
+  // Customer joins order tracking room
+  socket.on('joinOrderRoom', (orderId) => {
+    socket.join(`order_${orderId}`);
+    console.log(`[Socket.IO] Socket ${socket.id} joined order room: order_${orderId}`);
+  });
+
+  // Restaurant joins their own room for incoming orders
+  socket.on('joinRestaurantRoom', (restaurantId) => {
+    socket.join(`restaurant_${restaurantId}`);
+    console.log(`[Socket.IO] Socket ${socket.id} joined restaurant room: restaurant_${restaurantId}`);
+  });
+
+  // Delivery partner joins the shared delivery pool room
+  socket.on('joinDeliveryPartner', () => {
+    socket.join('delivery_partners');
+    console.log(`[Socket.IO] Socket ${socket.id} joined delivery_partners room`);
+  });
+
+  socket.on('disconnect', () => {
+    console.log(`[Socket.IO] Client disconnected: ${socket.id}`);
+  });
 });
 
-// Start Server
-async function start() {
+// Start server function
+async function startServer() {
+  // Connect to MongoDB (falls back to in-memory store if unavailable)
   await connectDB();
+
+  // Initialize the in-memory data store (with seed data)
   await storeService.init();
 
-  if (!isBackendOnly) {
-    if (process.env.NODE_ENV !== 'production') {
-      const vite = await createViteServer({
-        server: { middlewareMode: true },
-        appType: 'spa',
-      });
-      app.use(vite.middlewares);
-    } else {
-      const distPath = path.join(process.cwd(), 'dist');
-      app.use(express.static(distPath, { maxAge: '1d', index: false }));
-      app.get('*', (req, res) => {
-        res.sendFile(path.join(distPath, 'index.html'));
-      });
-    }
-  }
-
-  const runningServer = server.listen(PORT, '0.0.0.0', () => {
-    console.log(`\n  \x1b[32m\x1b[1m  🍕 FoodRush Platform [Running]\x1b[0m\n`);
-    console.log(`  \x1b[32m➜\x1b[0m  \x1b[1mLocal App:\x1b[0m   \x1b[36mhttp://localhost:${PORT}/\x1b[0m`);
-    console.log(`  \x1b[32m➜\x1b[0m  \x1b[1mLocal App (IP):\x1b[0m\x1b[36mhttp://127.0.0.1:${PORT}/\x1b[0m`);
-    console.log(`  \x1b[32m➜\x1b[0m  \x1b[1mAPI Health:\x1b[0m  \x1b[36mhttp://localhost:${PORT}/api/health\x1b[0m`);
+  server.listen(PORT, '0.0.0.0', () => {
+    console.log('\n  \x1b[32m\x1b[1m🍕 FoodRush Backend Server\x1b[0m\n');
+    console.log(`  \x1b[32m➜\x1b[0m  \x1b[1mAPI Server:\x1b[0m  \x1b[36mhttp://localhost:${PORT}\x1b[0m`);
+    console.log(`  \x1b[32m➜\x1b[0m  \x1b[1mHealth Check:\x1b[0m \x1b[36mhttp://localhost:${PORT}/api/health\x1b[0m`);
     console.log(`  \x1b[32m➜\x1b[0m  \x1b[1mMode:\x1b[0m        ${process.env.NODE_ENV || 'development'}\n`);
   });
 
-  // Graceful shutdown on SIGTERM / SIGINT for containerized deployments (Cloud Run, Docker, K8s)
+  // Graceful shutdown handlers
   const gracefulShutdown = (signal) => {
-    console.log(`\n[FoodRush] Received ${signal}. Initiating graceful shutdown...`);
-    runningServer.close(() => {
+    console.log(`\n[FoodRush] Received ${signal}. Shutting down gracefully...`);
+    server.close(() => {
       console.log('[FoodRush] HTTP server closed.');
       process.exit(0);
     });
-
-    // Force close if it takes longer than 10 seconds
+    // Force close after 10s if graceful shutdown takes too long
     setTimeout(() => {
       console.error('[FoodRush] Forced shutdown after timeout.');
       process.exit(1);
@@ -75,7 +84,7 @@ async function start() {
   process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 }
 
-start().catch((err) => {
-  console.error('[FoodRush] Server start failed:', err);
+startServer().catch((err) => {
+  console.error('[FoodRush] Server failed to start:', err);
   process.exit(1);
 });

@@ -1,194 +1,158 @@
-# 🍕 FoodRush - Food Delivery Web Application
+# 🍕 FoodRush – Multi-Vendor Food Delivery Platform
 
-A full-stack Food Delivery and Multi-Role Platform (Customer, Restaurant Owner, Delivery Partner, Admin) with real-time order tracking using React, Vite, Redux Toolkit, Tailwind CSS, Express, and Socket.IO.
+A full-stack MERN (MongoDB, Express, React, Node.js) food delivery application featuring four distinct user roles: **Customer**, **Restaurant Owner**, **Delivery Partner**, and **Admin**.
 
 ---
 
-## 📁 Project Architecture & File Structure
+## 🚀 Quick Start
 
-```text
-FoodRush/
-│
-├── frontend/
-│   ├── public/
-│   │   ├── favicon.ico
-│   │   └── images/
-│   │
+### Prerequisites
+- Node.js 18+
+- npm
+
+### 1. Start the Backend Server
+```bash
+cd server
+npm install
+npm run dev        # Runs on http://localhost:5000
+```
+
+### 2. Start the Frontend Client
+```bash
+cd client
+npm install
+npm run dev        # Runs on http://localhost:5173
+```
+
+Open [http://localhost:5173](http://localhost:5173) in your browser.
+
+---
+
+## 🔐 Demo Login Accounts
+
+Use these on the **Login page** (1-click demo buttons available):
+
+| Role               | Email                     | Password     |
+|--------------------|---------------------------|--------------|
+| Customer           | customer@foodrush.com     | password123  |
+| Restaurant Owner   | owner@foodrush.com        | password123  |
+| Delivery Partner   | delivery@foodrush.com     | password123  |
+| Super Admin        | admin@foodrush.com        | password123  |
+
+---
+
+## 🏗️ Project Structure
+
+```
+foodrush/
+├── client/                  # React + Vite Frontend
 │   ├── src/
-│   │   ├── assets/
-│   │   │   ├── images/
-│   │   │   └── icons/
-│   │   │
-│   │   ├── components/
-│   │   │   ├── common/
-│   │   │   │   ├── Button.jsx
-│   │   │   │   ├── Loader.jsx
-│   │   │   │   ├── Modal.jsx
-│   │   │   │   └── SearchBar.jsx
-│   │   │   │
-│   │   │   ├── navbar/
-│   │   │   │   ├── Navbar.jsx
-│   │   │   │   └── MobileMenu.jsx
-│   │   │   │
-│   │   │   ├── restaurant/
-│   │   │   │   ├── RestaurantCard.jsx
-│   │   │   │   ├── RestaurantList.jsx
-│   │   │   │   └── RestaurantDetails.jsx
-│   │   │   │
-│   │   │   ├── food/
-│   │   │   │   ├── FoodCard.jsx
-│   │   │   │   ├── FoodList.jsx
-│   │   │   │   └── FoodDetails.jsx
-│   │   │   │
-│   │   │   └── cart/
-│   │   │       ├── CartItem.jsx
-│   │   │       └── CartSummary.jsx
-│   │   │
 │   │   ├── pages/
-│   │   │   ├── Home.jsx
-│   │   │   ├── Restaurants.jsx
-│   │   │   ├── RestaurantDetails.jsx
-│   │   │   ├── FoodDetails.jsx
-│   │   │   ├── Cart.jsx
-│   │   │   ├── Checkout.jsx
-│   │   │   ├── Orders.jsx
-│   │   │   ├── OrderDetails.jsx
-│   │   │   ├── Profile.jsx
-│   │   │   │
-│   │   │   ├── auth/
-│   │   │   │   ├── Login.jsx
-│   │   │   │   ├── Signup.jsx
-│   │   │   │   ├── VerifyOTP.jsx
-│   │   │   │   └── ForgotPassword.jsx
-│   │   │   │
-│   │   │   └── admin/
-│   │   │       ├── Dashboard.jsx
-│   │   │       ├── Users.jsx
-│   │   │       ├── Restaurants.jsx
-│   │   │       ├── Foods.jsx
-│   │   │       └── Orders.jsx
-│   │   │
-│   │   ├── context/
-│   │   │   ├── AuthContext.jsx
-│   │   │   ├── CartContext.jsx
-│   │   │   └── ThemeContext.jsx
-│   │   │
-│   │   ├── services/
-│   │   │   ├── api.js
-│   │   │   ├── authService.js
-│   │   │   ├── foodService.js
-│   │   │   ├── restaurantService.js
-│   │   │   ├── orderService.js
-│   │   │   └── paymentService.js
-│   │   │
-│   │   ├── routes/
-│   │   │   └── AppRoutes.jsx
-│   │   │
-│   │   ├── layouts/
-│   │   │   ├── MainLayout.jsx
-│   │   │   └── AdminLayout.jsx
-│   │   │
-│   │   ├── hooks/
-│   │   ├── utils/
-│   │   ├── App.jsx
-│   │   ├── main.jsx
-│   │   └── index.css
-│   │
-│   ├── .env
-│   ├── package.json
-│   └── vite.config.js
-│
-├── backend/
-│   ├── src/
-│   │   ├── config/
-│   │   │   ├── db.js
-│   │   │   └── cloudinary.js
-│   │   │
-│   │   ├── controllers/
-│   │   │   ├── authController.js
-│   │   │   ├── userController.js
-│   │   │   ├── restaurantController.js
-│   │   │   ├── foodController.js
-│   │   │   ├── cartController.js
-│   │   │   ├── orderController.js
-│   │   │   └── paymentController.js
-│   │   │
-│   │   ├── models/
-│   │   │   ├── User.js
-│   │   │   ├── Restaurant.js
-│   │   │   ├── Food.js
-│   │   │   ├── Category.js
-│   │   │   ├── Cart.js
-│   │   │   ├── Order.js
-│   │   │   └── Review.js
-│   │   │
-│   │   ├── routes/
-│   │   │   ├── authRoutes.js
-│   │   │   ├── userRoutes.js
-│   │   │   ├── restaurantRoutes.js
-│   │   │   ├── foodRoutes.js
-│   │   │   ├── cartRoutes.js
-│   │   │   ├── orderRoutes.js
-│   │   │   └── paymentRoutes.js
-│   │   │
-│   │   ├── middleware/
-│   │   │   ├── authMiddleware.js
-│   │   │   ├── roleMiddleware.js
-│   │   │   ├── errorMiddleware.js
-│   │   │   └── uploadMiddleware.js
-│   │   │
-│   │   ├── services/
-│   │   │   ├── emailService.js
-│   │   │   ├── otpService.js
-│   │   │   └── paymentService.js
-│   │   │
-│   │   ├── utils/
-│   │   │   ├── generateToken.js
-│   │   │   ├── generateOTP.js
-│   │   │   └── validators.js
-│   │   │
-│   │   └── app.js
-│   │
-│   ├── server.js
-│   ├── .env
+│   │   │   ├── auth/        # Login, Signup, OTP, Forgot Password
+│   │   │   ├── customer/    # Home, Restaurants, Cart, Checkout, Orders
+│   │   │   ├── restaurant/  # Dashboard, Menu, Orders, Revenue
+│   │   │   ├── delivery/    # Dashboard, Available Orders, Earnings
+│   │   │   └── admin/       # Dashboard, Users, Foods, Analytics
+│   │   ├── components/
+│   │   │   ├── common/      # Navbar, Footer, Modal, Skeleton, Toast
+│   │   │   ├── cart/        # CartDrawer, CartItem
+│   │   │   ├── food/        # FoodCard, DishCustomizer
+│   │   │   ├── restaurant/  # RestaurantCard
+│   │   │   ├── layout/      # MainLayout, DashboardLayout
+│   │   │   └── dashboard/   # Sidebar, DashboardHeader
+│   │   ├── redux/
+│   │   │   └── slices/      # auth, cart, order, restaurant, food...
+│   │   ├── services/        # API service modules (authService, orderService...)
+│   │   ├── context/         # AuthContext
+│   │   └── hooks/           # useSocket
+│   ├── vite.config.js       # Vite + proxy config
+│   ├── tailwind.config.js
 │   └── package.json
 │
-├── .gitignore
-├── README.md
-└── package.json
+└── server/                  # Express + Node.js Backend
+    ├── server.js            # Entry point (HTTP + Socket.IO)
+    ├── app.js               # Express app + route mounting
+    ├── controllers/         # Route handlers
+    ├── routes/              # Express routers
+    ├── services/
+    │   ├── storeService.js  # In-memory data store (+ MongoDB sync)
+    │   └── backupService.js # MongoDB Atlas backup
+    ├── middleware/          # auth, role, error, upload
+    ├── models/              # Mongoose schemas (optional MongoDB sync)
+    ├── config/              # db.js, email.js, cloudinary.js
+    ├── seed/                # Seed data
+    └── .env
 ```
 
 ---
 
-## 🚀 Getting Started
+## ✨ Features
 
-### Option 1: Root Project (Concurrently - Recommended)
-Run both backend and frontend together with a single command from the root directory:
-```bash
-# Starts Express (Port 5000) & Vite React (Port 5173) simultaneously
-npm run dev
-```
+### Customer
+- Browse restaurants with search, filter by cuisine/rating
+- View food menus, add to cart, customise dishes
+- Checkout with address selection and coupon codes
+- Real-time order tracking via Socket.IO
+- Order history, favourites, profile management
 
-Or run individually:
-* **Backend:** `npm run backend` (Port 5000)
-* **Frontend:** `npm run frontend` (Port 5173)
+### Restaurant Owner
+- Dashboard with live incoming orders
+- Menu management (add/edit/toggle availability)
+- Revenue and analytics charts
+- Customer reviews and ratings
+
+### Delivery Partner
+- See available orders to accept
+- Live route display with active delivery
+- Earnings tracker
+
+### Admin
+- Full platform overview: users, restaurants, orders
+- Approve/reject restaurants and block users
+- Coupon management (create/toggle/delete)
+- MongoDB Atlas backup and restore
+- Platform analytics
 
 ---
 
-### Option 2: Standalone Folders
+## 🔧 Environment Variables
 
-#### Backend:
-```bash
-cd backend
-npm install
-npm run dev
-```
-Runs on `http://localhost:5000`.
+Copy `.env.example` or edit `server/.env`:
 
-#### Frontend:
-```bash
-cd frontend
-npm install
-npm run dev
+```env
+PORT=5000
+NODE_ENV=development
+JWT_SECRET=your_jwt_secret_here
+MONGO_URI=mongodb://localhost:27017/foodrush   # Optional - uses in-memory store if unavailable
+CLIENT_URL=http://localhost:5173
 ```
-Runs on `http://localhost:5173`.
+
+> **Note:** MongoDB is optional. The app runs fully on an in-memory data store with pre-loaded seed data. Connect MongoDB Atlas under Admin → Settings for persistence.
+
+---
+
+## 🛠️ Coupon Codes (Demo)
+
+| Code         | Discount       | Min Order |
+|--------------|----------------|-----------|
+| FOODRUSH50   | 50% off (max ₹150) | ₹300  |
+| WELCOME100   | ₹100 flat off  | ₹500      |
+| SUPER20      | 20% off (max ₹100) | ₹400  |
+
+---
+
+## 📡 Key API Endpoints
+
+| Method | Endpoint                  | Description              |
+|--------|---------------------------|--------------------------|
+| POST   | /api/auth/login           | Login                    |
+| POST   | /api/auth/register        | Register                 |
+| GET    | /api/auth/me              | Get current user         |
+| GET    | /api/restaurants          | List restaurants         |
+| GET    | /api/restaurants/:id      | Restaurant details       |
+| GET    | /api/foods                | List foods               |
+| POST   | /api/orders               | Place order              |
+| GET    | /api/orders               | Get my orders            |
+| PATCH  | /api/orders/:id/status    | Update order status      |
+| POST   | /api/coupons/validate     | Validate coupon          |
+| GET    | /api/health               | Health check             |
